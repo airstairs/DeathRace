@@ -26,42 +26,56 @@
         }
         #gameover {
             position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
+            top: 20px;
+            left: 20px;
+            width: 150px;
+            height: 150px;
+            box-sizing: border-box;
             color: #fff;
-            font-size: 32px;
+            font-size: 16px;
             font-weight: bold;
             text-align: center;
             display: none;
             z-index: 20;
-            text-shadow: 0 0 20px #f00;
-            background: rgba(0, 0, 0, 0.85);
-            padding: 30px;
-            border: 2px solid #f00;
-            border-radius: 10px;
-            box-shadow: 0 0 30px rgba(255, 0, 0, 0.5);
+            text-shadow: 0 0 10px #f00;
+            background: rgba(0, 10, 30, 0.9);
+            padding: 15px 10px;
+            border: 2px solid #0ff;
+            border-radius: 0px;
+            box-shadow: 0 0 15px rgba(0, 255, 255, 0.5);
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #gameover-text {
+            font-size: 14px;
+            margin-bottom: 10px;
+            word-break: break-word;
         }
         .btn-container {
             display: flex;
-            gap: 15px;
+            flex-direction: column;
+            gap: 8px;
             justify-content: center;
-            margin-top: 20px;
+            align-items: center;
+            width: 100%;
+            margin-top: 5px;
         }
         #gameover button {
-            padding: 12px 24px;
-            font-size: 18px;
+            padding: 8px 12px;
+            font-size: 13px;
             background: #0ff;
             border: none;
             cursor: pointer;
             font-weight: bold;
-            box-shadow: 0 0 10px #0ff;
-            border-radius: 5px;
+            box-shadow: 0 0 8px #0ff;
+            border-radius: 4px;
+            width: 100%;
         }
         #gameover button.secondary {
             background: #444;
             color: #fff;
-            box-shadow: 0 0 10px #444;
+            box-shadow: 0 0 8px #444;
         }
         #spectate-hud {
             position: absolute;
@@ -181,7 +195,7 @@
     <!-- Three.js Library -->
     <script src="three.min.js"></script>
     <script>
-        const MAP_SIZE = 800;
+        const MAP_SIZE = 1200;
         let scene, camera, renderer;
         let bikes = [];
         let player;
@@ -334,7 +348,7 @@
             }
 
             jump() {
-                if (!this.alive || this.jumpCooldown > 0 || this.isJumping || !gameActive) return false;
+                if (!this.alive || this.jumpCooldown > 0 || this.isJumping) return false;
                 this.isJumping = true;
                 this.jumpProgress = 0;
                 this.jumpCooldown = 180;
@@ -342,14 +356,14 @@
             }
 
             triggerNOS() {
-                if (!this.alive || this.nosUsed || !gameActive) return false;
+                if (!this.alive || this.nosUsed) return false;
                 this.nosUsed = true;
                 this.nosTimer = 360; 
                 return true;
             }
 
             update() {
-                if (!gameActive || !this.alive) return;
+                if (!this.alive) return;
 
                 if (this.jumpCooldown > 0) {
                     this.jumpCooldown--;
@@ -496,10 +510,10 @@
 
         function resetPositions() {
             dynamicBoxes = [];
-            player.reset(-150, -150, Math.PI * 0.75);
-            bikes[1].reset(150, -150, Math.PI * 1.25);
-            bikes[2].reset(-150, 150, Math.PI * 0.25);
-            bikes[3].reset(150, 150, Math.PI * 1.75);
+            player.reset(-350, -350, Math.PI * 0.75);
+            bikes[1].reset(350, -350, Math.PI * 1.25);
+            bikes[2].reset(-350, 350, Math.PI * 0.25);
+            bikes[3].reset(350, 350, Math.PI * 1.75);
 
             bikes.forEach(b => {
                 if (b.isAI) {
@@ -511,6 +525,7 @@
             if (soccerBall) soccerBall.reset();
             respawnGraceTimer = 50; 
             isSpectating = false;
+            gameActive = true;
             document.getElementById('spectate-hud').style.display = 'none';
         }
 
@@ -520,7 +535,7 @@
                     switchCameraTarget();
                     return;
                 }
-                if (!player.alive) return;
+                if (!player.alive && !gameActive) return;
                 if (e.key === 'ArrowLeft' || e.key === 'a') player.turning = 1;
                 if (e.key === 'ArrowRight' || e.key === 'd') player.turning = -1;
                 if (e.key === 'ArrowUp' || e.key === 'w') player.speed = GAME_STATE.SPEED_FAST;
@@ -712,22 +727,39 @@
 
             if (!player.alive && gameActive && !isSpectating) {
                 document.getElementById('gameover-text').innerText = "YOU CRASHED!";
-                document.getElementById('watch-btn').style.display = 'block';
-                document.getElementById('gameover').style.display = 'block';
+                let watchBtn = document.getElementById('watch-btn');
+                watchBtn.style.display = 'block';
+                watchBtn.className = "secondary";
+                watchBtn.innerText = "WATCH";
+                watchBtn.onclick = spectateGame;
+                document.getElementById('gameover').style.display = 'flex';
                 return;
             }
 
             if (livingBikes.length <= 1) {
-                gameActive = false;
                 document.getElementById('spectate-hud').style.display = 'none';
                 let message = "IT'S A DRAW!";
-                if (livingBikes.length === 1) {
+                if (livingBikes.length === 1 && livingBikes[0] === player) {
+                    message = "YOU WIN!";
+                    gameActive = false; 
+                    let watchBtn = document.getElementById('watch-btn');
+                    watchBtn.style.display = 'block';
+                    watchBtn.className = ""; 
+                    watchBtn.innerText = "RESTART";
+                    watchBtn.onclick = restartGame;
+                    
+                    document.getElementById('gameover-text').innerText = message;
+                    document.getElementById('gameover').style.display = 'flex';
+                    return;
+                } else if (livingBikes.length === 1) {
                     const winner = livingBikes[0];
-                    message = winner.isAI ? `${winner.name} (${winner.personality.toUpperCase()}) WINS!` : "YOU WIN!";
+                    message = `${winner.name} WINS!`;
                 }
+                
+                gameActive = false;
                 document.getElementById('gameover-text').innerText = message;
                 document.getElementById('watch-btn').style.display = 'none';
-                document.getElementById('gameover').style.display = 'block';
+                document.getElementById('gameover').style.display = 'flex';
             }
         }
 
@@ -790,7 +822,6 @@
             document.getElementById('gameover').style.display = 'none';
             document.getElementById('spectate-hud').style.display = 'flex';
             
-            // Find first available living bike to spectate
             const living = bikes.filter(b => b.alive);
             if (living.length > 0) {
                 specTargetIndex = bikes.indexOf(living[0]);
@@ -815,7 +846,7 @@
         function animate() {
             requestAnimationFrame(animate);
 
-            if (gameActive) {
+            if (gameActive || (player.alive && bikes.filter(b => b.alive).length === 1)) {
                 player.update();
                 bikes.forEach(b => {
                     if (b.isAI) {
@@ -823,8 +854,10 @@
                         b.update();
                     }
                 });
-                soccerBall.update();
-                checkCollisions();
+                if (gameActive) {
+                    soccerBall.update();
+                    checkCollisions();
+                }
 
                 let targetCamBike = player;
                 if (!player.alive && isSpectating) {
@@ -832,7 +865,6 @@
                     if (target && target.alive) {
                         targetCamBike = target;
                     } else {
-                        // Automatically find next alive bike if current target crashed
                         const living = bikes.filter(b => b.alive);
                         if (living.length > 0) {
                             specTargetIndex = bikes.indexOf(living[0]);
