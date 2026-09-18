@@ -854,8 +854,11 @@
                         b.update();
                     }
                 });
+                
+                // Always update the soccer ball physics and collisions, even when the match is won
+                if (soccerBall) soccerBall.update();
+
                 if (gameActive) {
-                    soccerBall.update();
                     checkCollisions();
                 }
 
