@@ -1,0 +1,20 @@
+{
+  "allFiles": [
+    {
+      "file": "/storage/emulated/0/AndroidIDEProjects/DeathRace/app/src/main/AndroidManifest.xml",
+      "selection": {
+        "end": {
+          "column": 52,
+          "index": 594,
+          "line": 14
+        },
+        "start": {
+          "column": 52,
+          "index": 594,
+          "line": 14
+        }
+      }
+    }
+  ],
+  "selectedFile": "/storage/emulated/0/AndroidIDEProjects/DeathRace/app/src/main/AndroidManifest.xml"
+}
